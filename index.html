@@ -1,136 +1,110 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta charset="utf-8">
 <title>Potência da Guerra</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
 
 <style>
-
 body{
-font-family:Arial;
-background:#0f172a;
+margin:0;
+background:black;
 color:white;
 text-align:center;
-margin:0;
+font-family:Arial;
 }
-
-h1{
-color:gold;
-margin-top:20px;
-}
-
-.box{
-background:#1e293b;
-margin:15px;
-padding:20px;
-border-radius:10px;
-}
-
-button{
-padding:15px;
-margin:10px;
-font-size:18px;
-background:#dc2626;
-color:white;
-border:none;
-border-radius:8px;
-}
-
 </style>
 
 </head>
 
 <body>
 
-<h1>⚔️ Potência da Guerra</h1>
-
-<div class="box">
-
-<p>💰 Ouro: <span id="gold">100</span></p>
-<p>🪖 Tropas: <span id="troops">0</span></p>
-
-</div>
-
-<div class="box">
-
-<button onclick="treinar()">Treinar Soldado (50 ouro)</button>
-
-<button onclick="atacar()">Atacar Inimigo</button>
-
-</div>
-
-<div class="box">
-
-<p id="log">Bem-vindo comandante!</p>
-
-</div>
+<h2>⚔️ Potência da Guerra</h2>
 
 <script>
 
-let gold = 100
-let troops = 0
+let player;
+let cursors;
+let enemies;
+let bullets;
 
-function atualizar(){
+const config = {
+type: Phaser.AUTO,
+width: 800,
+height: 500,
+physics: {
+default: 'arcade'
+},
+scene: {
+preload: preload,
+create: create,
+update: update
+}
+};
 
-document.getElementById("gold").innerText = gold
-document.getElementById("troops").innerText = troops
+const game = new Phaser.Game(config);
+
+function preload(){
+
+this.load.image('player','https://labs.phaser.io/assets/sprites/phaser-dude.png');
+this.load.image('enemy','https://labs.phaser.io/assets/sprites/robot.png');
+this.load.image('bullet','https://labs.phaser.io/assets/sprites/bullet.png');
 
 }
 
-function treinar(){
+function create(){
 
-if(gold >= 50){
+player = this.physics.add.image(400,250,'player');
 
-gold -= 50
-troops += 1
+cursors = this.input.keyboard.createCursorKeys();
 
-document.getElementById("log").innerText = "Soldado treinado!"
+bullets = this.physics.add.group();
 
-}else{
+enemies = this.physics.add.group();
 
-document.getElementById("log").innerText = "Ouro insuficiente!"
+for(let i=0;i<5;i++){
+let enemy = enemies.create(Math.random()*800,Math.random()*500,'enemy');
+enemy.setVelocity(Phaser.Math.Between(-100,100),Phaser.Math.Between(-100,100));
+}
+
+this.input.on('pointerdown',()=>{
+
+let bullet = bullets.create(player.x,player.y,'bullet');
+
+this.physics.moveToPointer(bullet,400);
+
+});
+
+this.physics.add.overlap(bullets,enemies,(bullet,enemy)=>{
+
+bullet.destroy();
+enemy.destroy();
+
+});
 
 }
 
-atualizar()
+function update(){
 
+if(cursors.left.isDown){
+player.x -= 4;
 }
 
-function atacar(){
-
-if(troops <= 0){
-
-document.getElementById("log").innerText = "Você não tem tropas!"
-
-return
-
+if(cursors.right.isDown){
+player.x += 4;
 }
 
-let chance = Math.random()
-
-if(chance > 0.4){
-
-let loot = Math.floor(Math.random()*100)+50
-
-gold += loot
-
-document.getElementById("log").innerText = "Vitória! Você ganhou "+loot+" ouro!"
-
-}else{
-
-troops -= 1
-
-document.getElementById("log").innerText = "Derrota! Você perdeu um soldado."
-
+if(cursors.up.isDown){
+player.y -= 4;
 }
 
-atualizar()
-
+if(cursors.down.isDown){
+player.y += 4;
 }
 
-atualizar()
+}
 
 </script>
 
