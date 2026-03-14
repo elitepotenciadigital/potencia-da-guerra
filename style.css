@@ -1,0 +1,261 @@
+:root {
+  --bg-1: #9ad8ff;
+  --bg-2: #e5f9ff;
+  --ink: #2a1f15;
+  --panel: rgba(255, 255, 255, 0.9);
+  --stroke: #8a5f33;
+  --gold: #f6c84c;
+  --energy: #4bc2ff;
+  --ok: #2f9c5a;
+  --danger: #c94f4f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  min-height: 100vh;
+}
+
+.sky {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.75), transparent 22%),
+    radial-gradient(circle at 80% 14%, rgba(255, 255, 255, 0.65), transparent 24%);
+}
+
+.app {
+  position: relative;
+  padding: 12px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.topbar {
+  background: linear-gradient(135deg, #7f4b25, #5b3119);
+  color: #fff6ed;
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow: 0 14px 30px rgba(60, 31, 14, 0.28);
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 1.9rem);
+}
+
+.brand p {
+  margin: 4px 0 10px;
+  opacity: 0.9;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.pill.gold {
+  background: rgba(246, 200, 76, 0.35);
+}
+
+.pill.energy {
+  background: rgba(75, 194, 255, 0.35);
+}
+
+.layout {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1.25fr 0.95fr;
+  gap: 12px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 3px solid rgba(138, 95, 51, 0.35);
+  border-radius: 20px;
+  padding: 12px;
+  box-shadow: 0 10px 20px rgba(58, 36, 12, 0.12);
+}
+
+.panel h2 {
+  margin: 0 0 8px;
+}
+
+.hint {
+  margin: 0 0 8px;
+}
+
+.build-menu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.build-card {
+  border: 2px solid rgba(138, 95, 51, 0.25);
+  border-radius: 14px;
+  padding: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.build-card:active {
+  transform: scale(0.98);
+}
+
+.build-card.active {
+  border-color: #d4733e;
+  background: #fff2e8;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 4px;
+  background: #65b54f;
+  border-radius: 14px;
+  padding: 6px;
+}
+
+.cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  border: 2px solid rgba(44, 87, 34, 0.4);
+  background: #8ad469;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.68rem;
+  line-height: 1.05;
+  user-select: none;
+  cursor: pointer;
+}
+
+.cell.occupied {
+  border-color: rgba(42, 31, 21, 0.5);
+  color: #2a1f15;
+  font-weight: 700;
+}
+
+.cell.selected {
+  outline: 3px solid #ffffff;
+}
+
+.selected-card {
+  border: 2px dashed rgba(138, 95, 51, 0.4);
+  border-radius: 12px;
+  padding: 10px;
+  min-height: 70px;
+  background: #fffef7;
+}
+
+.action {
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ec8a53, #c46333);
+  color: white;
+  padding: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.action.danger {
+  background: linear-gradient(180deg, #e46363, #c34646);
+}
+
+.attack-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.leaderboard {
+  display: grid;
+  gap: 6px;
+}
+
+.rank-item {
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(138, 95, 51, 0.25);
+  padding: 8px;
+  font-size: 0.9rem;
+}
+
+.log {
+  min-height: 120px;
+  max-height: 220px;
+  overflow: auto;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid rgba(138, 95, 51, 0.3);
+  padding: 8px;
+}
+
+.log-item {
+  font-size: 0.86rem;
+  margin-bottom: 6px;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 11, 6, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-card {
+  width: min(420px, 100%);
+  border-radius: 16px;
+  border: 3px solid rgba(138, 95, 51, 0.4);
+  background: #fffdf5;
+  padding: 16px;
+}
+
+.modal-card h3 {
+  margin-top: 0;
+}
+
+.modal-card input {
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid rgba(138, 95, 51, 0.35);
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    gap: 3px;
+  }
+}
