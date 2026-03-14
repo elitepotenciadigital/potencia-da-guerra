@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,71 +7,98 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div class="sky"></div>
+    <div class="bg-layer"></div>
     <div class="app">
-      <header class="topbar">
-        <div class="brand">
+      <header class="hud">
+        <div class="logo-wrap">
           <h1>Potencia da Guerra</h1>
-          <p>Browser Strategy Game</p>
+          <p>Construa, evolua, ataque e suba no ranking</p>
         </div>
-        <div class="stats">
-          <div class="pill">Player: <strong id="playerName"></strong></div>
-          <div class="pill">Level: <strong id="playerLevel">1</strong></div>
-          <div class="pill">XP: <strong id="playerXp">0</strong></div>
-          <div class="pill">Trophies: <strong id="playerTrophies">0</strong></div>
-          <div class="pill gold">Gold: <strong id="goldCount">0</strong></div>
-          <div class="pill energy">Energy: <strong id="energyCount">0</strong></div>
+        <div class="resource-wrap">
+          <div class="res-card">
+            <span>Jogador</span>
+            <strong id="uiPlayerName">-</strong>
+          </div>
+          <div class="res-card">
+            <span>Nivel</span>
+            <strong id="uiLevel">1</strong>
+          </div>
+          <div class="res-card">
+            <span>XP</span>
+            <strong id="uiXp">0</strong>
+          </div>
+          <div class="res-card">
+            <span>Trofeus</span>
+            <strong id="uiTrophies">0</strong>
+          </div>
+          <div class="res-card gold">
+            <span>Ouro</span>
+            <strong id="uiGold">0</strong>
+          </div>
+          <div class="res-card energy">
+            <span>Energia</span>
+            <strong id="uiEnergy">0</strong>
+          </div>
+          <div class="res-card troop">
+            <span>Tropas</span>
+            <strong id="uiTroops">0</strong>
+          </div>
         </div>
       </header>
 
-      <main class="layout">
-        <section class="left">
-          <div class="panel">
-            <h2>Build</h2>
+      <main class="main-layout">
+        <section class="board-panel panel">
+          <div class="panel-head">
+            <h2>Sua Base</h2>
+            <p id="buildTip">Selecione uma construção e toque em um tile vazio.</p>
+          </div>
+          <div id="baseGrid" class="base-grid"></div>
+        </section>
+
+        <aside class="side-panel">
+          <section class="panel">
+            <h3>Construir</h3>
             <div id="buildMenu" class="build-menu"></div>
-          </div>
+          </section>
 
-          <div class="panel">
-            <h2>Base Grid</h2>
-            <p class="hint" id="buildHint">Select a building, then tap an empty tile.</p>
-            <div id="grid" class="grid"></div>
-          </div>
-        </section>
+          <section class="panel">
+            <h3>Edificio selecionado</h3>
+            <div id="selectedInfo" class="info-card">Nenhum edificio selecionado.</div>
+            <button id="btnUpgrade" class="btn">Melhorar edificio</button>
+          </section>
 
-        <section class="right">
-          <div class="panel">
-            <h2>Selected Building</h2>
-            <div id="selectedCard" class="selected-card">No building selected.</div>
-            <button id="upgradeBtn" class="action">Upgrade Selected</button>
-          </div>
-
-          <div class="panel">
-            <h2>Attack</h2>
-            <div class="attack-row">
-              <button id="findEnemyBtn" class="action">Find Enemy</button>
-              <button id="attackBtn" class="action danger">Attack</button>
+          <section class="panel">
+            <h3>Exercito e Ataque</h3>
+            <div class="row-btns">
+              <button id="btnTrain1" class="btn">Treinar +1</button>
+              <button id="btnTrain5" class="btn">Treinar +5</button>
             </div>
-            <div id="enemyCard" class="selected-card">No enemy selected.</div>
-          </div>
+            <div class="row-btns">
+              <button id="btnScout" class="btn">Procurar alvo</button>
+              <button id="btnAttack" class="btn danger">Atacar</button>
+            </div>
+            <div id="enemyInfo" class="info-card">Nenhum alvo encontrado.</div>
+          </section>
 
-          <div class="panel">
-            <h2>Leaderboard (Local)</h2>
+          <section class="panel">
+            <h3>Ranking Local</h3>
             <div id="leaderboard" class="leaderboard"></div>
-          </div>
+          </section>
 
-          <div class="panel">
-            <h2>Battle Log</h2>
-            <div id="log" class="log"></div>
-          </div>
-        </section>
+          <section class="panel">
+            <h3>Log da batalha</h3>
+            <div id="battleLog" class="battle-log"></div>
+          </section>
+        </aside>
       </main>
     </div>
 
-    <div id="profileModal" class="modal">
+    <div id="modalProfile" class="modal">
       <div class="modal-card">
-        <h3>Choose your player name</h3>
-        <input id="profileNameInput" type="text" maxlength="18" placeholder="Your name" />
-        <button id="startGameBtn" class="action">Start Game</button>
+        <h3>Criar perfil</h3>
+        <p>Esse perfil fica salvo no seu navegador.</p>
+        <input id="inputProfileName" type="text" maxlength="18" placeholder="Nome do jogador" />
+        <button id="btnStart" class="btn">Comecar</button>
       </div>
     </div>
 

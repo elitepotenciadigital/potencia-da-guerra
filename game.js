@@ -1,18 +1,74 @@
-const STORAGE_KEY = "potencia_da_guerra_profiles_v1";
-const CURRENT_PROFILE_KEY = "potencia_da_guerra_current_profile";
-
-const BUILDINGS = {
-  townHall: { name: "Town Hall", icon: "TH", cost: { gold: 0, energy: 0 }, production: { gold: 0, energy: 0 }, hp: 400 },
-  goldMine: { name: "Gold Mine", icon: "GM", cost: { gold: 120, energy: 25 }, production: { gold: 14, energy: 0 }, hp: 120 },
-  energyPlant: { name: "Energy Plant", icon: "EP", cost: { gold: 90, energy: 30 }, production: { gold: 0, energy: 13 }, hp: 120 },
-  barracks: { name: "Barracks", icon: "BR", cost: { gold: 180, energy: 90 }, production: { gold: 0, energy: 0 }, hp: 170 },
-  storage: { name: "Storage", icon: "ST", cost: { gold: 120, energy: 55 }, production: { gold: 0, energy: 0 }, hp: 150 },
-  defense: { name: "Defense", icon: "DF", cost: { gold: 140, energy: 90 }, production: { gold: 0, energy: 0 }, hp: 190 }
-};
+const STORAGE_KEY = "pdg_profiles_v2";
+const CURRENT_KEY = "pdg_current_profile_v2";
 
 const GRID_SIZE = 10;
-const SAVE_INTERVAL_MS = 5000;
-const TICK_INTERVAL_MS = 1000;
+const SAVE_INTERVAL = 5000;
+const TICK_INTERVAL = 1000;
+
+const BUILDINGS = {
+  townHall: {
+    id: "townHall",
+    name: "Centro",
+    short: "CT",
+    tileClass: "townhall",
+    cost: { gold: 0, energy: 0 },
+    hp: 500,
+    production: { gold: 0, energy: 0 },
+    defense: 20
+  },
+  goldMine: {
+    id: "goldMine",
+    name: "Mina de Ouro",
+    short: "MO",
+    tileClass: "mine",
+    cost: { gold: 120, energy: 35 },
+    hp: 140,
+    production: { gold: 18, energy: 0 },
+    defense: 3
+  },
+  energyPlant: {
+    id: "energyPlant",
+    name: "Gerador",
+    short: "GE",
+    tileClass: "energy",
+    cost: { gold: 95, energy: 30 },
+    hp: 140,
+    production: { gold: 0, energy: 17 },
+    defense: 3
+  },
+  barracks: {
+    id: "barracks",
+    name: "Quartel",
+    short: "QT",
+    tileClass: "barracks",
+    cost: { gold: 185, energy: 95 },
+    hp: 180,
+    production: { gold: 0, energy: 0 },
+    defense: 8
+  },
+  storage: {
+    id: "storage",
+    name: "Armazem",
+    short: "AR",
+    tileClass: "storage",
+    cost: { gold: 140, energy: 70 },
+    hp: 170,
+    production: { gold: 0, energy: 0 },
+    defense: 6
+  },
+  defenseTower: {
+    id: "defenseTower",
+    name: "Torre",
+    short: "TD",
+    tileClass: "defense",
+    cost: { gold: 170, energy: 105 },
+    hp: 210,
+    production: { gold: 0, energy: 0 },
+    defense: 30
+  }
+};
+
+const BUILD_MENU_KEYS = ["goldMine", "energyPlant", "barracks", "storage", "defenseTower"];
 
 let selectedBuildType = null;
 let selectedBuildingId = null;
@@ -20,34 +76,37 @@ let selectedEnemy = null;
 let profileId = null;
 let state = null;
 
-const els = {
-  playerName: document.getElementById("playerName"),
-  playerLevel: document.getElementById("playerLevel"),
-  playerXp: document.getElementById("playerXp"),
-  playerTrophies: document.getElementById("playerTrophies"),
-  goldCount: document.getElementById("goldCount"),
-  energyCount: document.getElementById("energyCount"),
+const ui = {
+  playerName: document.getElementById("uiPlayerName"),
+  level: document.getElementById("uiLevel"),
+  xp: document.getElementById("uiXp"),
+  trophies: document.getElementById("uiTrophies"),
+  gold: document.getElementById("uiGold"),
+  energy: document.getElementById("uiEnergy"),
+  troops: document.getElementById("uiTroops"),
+  buildTip: document.getElementById("buildTip"),
+  baseGrid: document.getElementById("baseGrid"),
   buildMenu: document.getElementById("buildMenu"),
-  buildHint: document.getElementById("buildHint"),
-  grid: document.getElementById("grid"),
-  selectedCard: document.getElementById("selectedCard"),
-  upgradeBtn: document.getElementById("upgradeBtn"),
-  findEnemyBtn: document.getElementById("findEnemyBtn"),
-  attackBtn: document.getElementById("attackBtn"),
-  enemyCard: document.getElementById("enemyCard"),
+  selectedInfo: document.getElementById("selectedInfo"),
+  enemyInfo: document.getElementById("enemyInfo"),
   leaderboard: document.getElementById("leaderboard"),
-  log: document.getElementById("log"),
-  profileModal: document.getElementById("profileModal"),
-  profileNameInput: document.getElementById("profileNameInput"),
-  startGameBtn: document.getElementById("startGameBtn")
+  battleLog: document.getElementById("battleLog"),
+  btnUpgrade: document.getElementById("btnUpgrade"),
+  btnTrain1: document.getElementById("btnTrain1"),
+  btnTrain5: document.getElementById("btnTrain5"),
+  btnScout: document.getElementById("btnScout"),
+  btnAttack: document.getElementById("btnAttack"),
+  modalProfile: document.getElementById("modalProfile"),
+  inputProfileName: document.getElementById("inputProfileName"),
+  btnStart: document.getElementById("btnStart")
 };
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
 }
 
 function loadProfiles() {
@@ -58,7 +117,7 @@ function saveProfiles(profiles) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
 }
 
-function createInitialState(name) {
+function makeNewProfile(name) {
   const now = Date.now();
   return {
     id: uid(),
@@ -66,46 +125,45 @@ function createInitialState(name) {
     level: 1,
     xp: 0,
     trophies: 100,
-    gold: 650,
-    energy: 450,
+    gold: 700,
+    energy: 500,
+    troops: 8,
     buildings: [
       { id: uid(), type: "townHall", x: 4, y: 4, level: 1 },
       { id: uid(), type: "goldMine", x: 2, y: 2, level: 1 },
       { id: uid(), type: "energyPlant", x: 6, y: 2, level: 1 },
-      { id: uid(), type: "barracks", x: 3, y: 7, level: 1 },
-      { id: uid(), type: "defense", x: 6, y: 6, level: 1 }
+      { id: uid(), type: "barracks", x: 2, y: 6, level: 1 },
+      { id: uid(), type: "defenseTower", x: 6, y: 6, level: 1 }
     ],
     lastTick: now,
     updatedAt: now
   };
 }
 
-function saveCurrentState() {
-  const profiles = loadProfiles();
-  state.updatedAt = Date.now();
-  profiles[profileId] = state;
-  saveProfiles(profiles);
-}
-
-function calculateLevel(xp) {
-  return Math.floor(Math.sqrt(xp / 80)) + 1;
-}
-
 function buildingAt(x, y) {
-  return state.buildings.find((b) => b.x === x && b.y === y);
+  return state.buildings.find((b) => b.x === x && b.y === y) || null;
 }
 
-function getBuildingStats(building) {
-  const data = BUILDINGS[building.type];
-  const levelFactor = 1 + (building.level - 1) * 0.45;
+function getBuildingState(id) {
+  return state.buildings.find((b) => b.id === id) || null;
+}
+
+function buildingLevelFactor(level) {
+  return 1 + (level - 1) * 0.45;
+}
+
+function buildingStats(building) {
+  const cfg = BUILDINGS[building.type];
+  const f = buildingLevelFactor(building.level);
   return {
-    hp: Math.floor(data.hp * levelFactor),
-    productionGold: Math.floor(data.production.gold * levelFactor),
-    productionEnergy: Math.floor(data.production.energy * levelFactor)
+    hp: Math.floor(cfg.hp * f),
+    prodGold: Math.floor(cfg.production.gold * f),
+    prodEnergy: Math.floor(cfg.production.energy * f),
+    defense: Math.floor(cfg.defense * f)
   };
 }
 
-function getStorageCaps() {
+function capacity() {
   let goldCap = 1200;
   let energyCap = 1100;
   state.buildings.forEach((b) => {
@@ -121,169 +179,36 @@ function getStorageCaps() {
   return { goldCap, energyCap };
 }
 
-function collectProduction(deltaSeconds) {
-  let perMinuteGold = 0;
-  let perMinuteEnergy = 0;
-  state.buildings.forEach((building) => {
-    const s = getBuildingStats(building);
-    perMinuteGold += s.productionGold;
-    perMinuteEnergy += s.productionEnergy;
-  });
-
-  const gainedGold = (perMinuteGold / 60) * deltaSeconds;
-  const gainedEnergy = (perMinuteEnergy / 60) * deltaSeconds;
-  const caps = getStorageCaps();
-  state.gold = clamp(state.gold + gainedGold, 0, caps.goldCap);
-  state.energy = clamp(state.energy + gainedEnergy, 0, caps.energyCap);
-}
-
-function upgradeCost(building) {
-  const base = BUILDINGS[building.type].cost;
-  const mult = 1 + building.level * 0.75;
-  return {
-    gold: Math.floor(base.gold * mult + 45),
-    energy: Math.floor(base.energy * mult + 30)
-  };
-}
-
-function addLog(msg) {
-  const item = document.createElement("div");
-  item.className = "log-item";
-  item.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  els.log.prepend(item);
-  while (els.log.children.length > 40) {
-    els.log.removeChild(els.log.lastChild);
-  }
-}
-
-function renderTop() {
-  const caps = getStorageCaps();
-  els.playerName.textContent = state.name;
-  els.playerLevel.textContent = `${state.level}`;
-  els.playerXp.textContent = `${Math.floor(state.xp)}`;
-  els.playerTrophies.textContent = `${state.trophies}`;
-  els.goldCount.textContent = `${Math.floor(state.gold)} / ${caps.goldCap}`;
-  els.energyCount.textContent = `${Math.floor(state.energy)} / ${caps.energyCap}`;
-}
-
-function renderBuildMenu() {
-  els.buildMenu.innerHTML = "";
-  Object.entries(BUILDINGS).forEach(([key, b]) => {
-    if (key === "townHall") return;
-    const el = document.createElement("button");
-    el.className = `build-card${selectedBuildType === key ? " active" : ""}`;
-    el.innerHTML = `<strong>${b.name}</strong><br />${b.cost.gold}G / ${b.cost.energy}E`;
-    el.onclick = () => {
-      selectedBuildType = selectedBuildType === key ? null : key;
-      renderBuildMenu();
-      els.buildHint.textContent = selectedBuildType
-        ? `${BUILDINGS[selectedBuildType].name} selected. Tap an empty tile.`
-        : "Select a building, then tap an empty tile.";
-    };
-    els.buildMenu.appendChild(el);
-  });
-}
-
-function renderGrid() {
-  els.grid.innerHTML = "";
-  for (let y = 0; y < GRID_SIZE; y += 1) {
-    for (let x = 0; x < GRID_SIZE; x += 1) {
-      const cell = document.createElement("button");
-      const b = buildingAt(x, y);
-      cell.className = `cell${b ? " occupied" : ""}${b && b.id === selectedBuildingId ? " selected" : ""}`;
-      cell.innerHTML = b ? `${BUILDINGS[b.type].icon}<br/>Lv${b.level}` : "";
-      cell.onclick = () => onCellClick(x, y);
-      els.grid.appendChild(cell);
-    }
-  }
-}
-
-function renderSelected() {
-  const b = state.buildings.find((i) => i.id === selectedBuildingId);
-  if (!b) {
-    els.selectedCard.textContent = "No building selected.";
-    return;
-  }
-  const stats = getBuildingStats(b);
-  const cost = upgradeCost(b);
-  els.selectedCard.innerHTML = `
-    <strong>${BUILDINGS[b.type].name} (Lv ${b.level})</strong><br/>
-    HP ${stats.hp} | +${stats.productionGold}G/min | +${stats.productionEnergy}E/min<br/>
-    Upgrade: ${cost.gold}G / ${cost.energy}E
-  `;
-}
-
-function offensePower() {
-  const barracksLevel = state.buildings.filter((b) => b.type === "barracks").reduce((a, b) => a + b.level, 0);
-  const levelBonus = state.level * 10;
-  return 80 + barracksLevel * 45 + levelBonus;
-}
-
-function defensePower() {
-  let defense = 70;
+function perMinuteProduction() {
+  let gold = 0;
+  let energy = 0;
   state.buildings.forEach((b) => {
-    if (b.type === "defense") defense += 55 * b.level;
-    if (b.type === "townHall") defense += 45 * b.level;
+    const s = buildingStats(b);
+    gold += s.prodGold;
+    energy += s.prodEnergy;
   });
-  return defense;
+  return { gold, energy };
 }
 
-function buildEnemyFromLeaderboard() {
-  const profiles = Object.values(loadProfiles()).filter((p) => p.id !== state.id);
-  if (profiles.length > 0) {
-    const pick = profiles[Math.floor(Math.random() * profiles.length)];
-    return {
-      id: pick.id,
-      name: pick.name,
-      level: pick.level,
-      trophies: pick.trophies,
-      power: 70 + pick.level * 20 + Math.floor(Math.random() * 65),
-      rewardGold: 80 + pick.level * 25,
-      rewardEnergy: 70 + pick.level * 25
-    };
-  }
-  const botLevel = clamp(state.level + Math.floor(Math.random() * 3) - 1, 1, 99);
-  return {
-    id: `bot-${uid()}`,
-    name: `Bot Lv${botLevel}`,
-    level: botLevel,
-    trophies: 100 + botLevel * 12,
-    power: 75 + botLevel * 22 + Math.floor(Math.random() * 70),
-    rewardGold: 120 + botLevel * 35,
-    rewardEnergy: 100 + botLevel * 30
-  };
+function totalDefense() {
+  return state.buildings.reduce((sum, b) => sum + buildingStats(b).defense, 0);
 }
 
-function renderEnemy() {
-  if (!selectedEnemy) {
-    els.enemyCard.textContent = "No enemy selected.";
-    return;
-  }
-  els.enemyCard.innerHTML = `
-    <strong>${selectedEnemy.name}</strong><br/>
-    Level ${selectedEnemy.level} | Trophies ${selectedEnemy.trophies}<br/>
-    Estimated defense: ${selectedEnemy.power}
-  `;
-}
-
-function renderLeaderboard() {
-  const profiles = Object.values(loadProfiles()).sort((a, b) => b.trophies - a.trophies || b.level - a.level);
-  els.leaderboard.innerHTML = "";
-  profiles.slice(0, 12).forEach((p, i) => {
-    const item = document.createElement("div");
-    item.className = "rank-item";
-    item.textContent = `#${i + 1} ${p.name} | Lv ${p.level} | ${p.trophies} trophies`;
-    els.leaderboard.appendChild(item);
+function totalOffense() {
+  let barracks = 0;
+  state.buildings.forEach((b) => {
+    if (b.type === "barracks") barracks += b.level;
   });
+  return 70 + state.troops * 11 + barracks * 42 + state.level * 9;
 }
 
-function rerender() {
-  renderTop();
-  renderBuildMenu();
-  renderGrid();
-  renderSelected();
-  renderEnemy();
-  renderLeaderboard();
+function addXp(value) {
+  state.xp += value;
+  const old = state.level;
+  state.level = Math.floor(Math.sqrt(state.xp / 90)) + 1;
+  if (state.level > old) {
+    log(`Subiu de nivel! Agora voce e nivel ${state.level}.`);
+  }
 }
 
 function spend(cost) {
@@ -293,140 +218,341 @@ function spend(cost) {
   return true;
 }
 
-function gainXp(v) {
-  state.xp += v;
-  const old = state.level;
-  state.level = calculateLevel(state.xp);
-  if (state.level > old) addLog(`Level up! You are now level ${state.level}.`);
+function upgradeCost(building) {
+  const base = BUILDINGS[building.type].cost;
+  const m = 1 + building.level * 0.82;
+  return {
+    gold: Math.floor(base.gold * m + 55),
+    energy: Math.floor(base.energy * m + 35)
+  };
 }
 
-function onCellClick(x, y) {
+function trainCost(amount) {
+  return {
+    gold: amount * 28,
+    energy: amount * 22
+  };
+}
+
+function syncProduction(deltaSeconds) {
+  const prod = perMinuteProduction();
+  const caps = capacity();
+  state.gold = clamp(state.gold + (prod.gold / 60) * deltaSeconds, 0, caps.goldCap);
+  state.energy = clamp(state.energy + (prod.energy / 60) * deltaSeconds, 0, caps.energyCap);
+}
+
+function saveCurrent() {
+  const profiles = loadProfiles();
+  state.updatedAt = Date.now();
+  profiles[profileId] = state;
+  saveProfiles(profiles);
+}
+
+function log(message) {
+  const line = document.createElement("div");
+  line.className = "battle-line";
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+  ui.battleLog.prepend(line);
+  while (ui.battleLog.children.length > 45) {
+    ui.battleLog.removeChild(ui.battleLog.lastChild);
+  }
+}
+
+function renderHeader() {
+  const caps = capacity();
+  ui.playerName.textContent = state.name;
+  ui.level.textContent = String(state.level);
+  ui.xp.textContent = String(Math.floor(state.xp));
+  ui.trophies.textContent = String(state.trophies);
+  ui.gold.textContent = `${Math.floor(state.gold)} / ${caps.goldCap}`;
+  ui.energy.textContent = `${Math.floor(state.energy)} / ${caps.energyCap}`;
+  ui.troops.textContent = String(state.troops);
+}
+
+function renderBuildMenu() {
+  ui.buildMenu.innerHTML = "";
+  BUILD_MENU_KEYS.forEach((key) => {
+    const b = BUILDINGS[key];
+    const el = document.createElement("button");
+    el.className = `build-item${selectedBuildType === key ? " active" : ""}`;
+    el.innerHTML = `<strong>${b.name}</strong><span>${b.cost.gold} ouro / ${b.cost.energy} energia</span>`;
+    el.onclick = () => {
+      selectedBuildType = selectedBuildType === key ? null : key;
+      renderBuildMenu();
+      ui.buildTip.textContent = selectedBuildType
+        ? `Modo construcao: ${BUILDINGS[selectedBuildType].name}. Toque em um tile vazio.`
+        : "Selecione uma construção e toque em um tile vazio.";
+    };
+    ui.buildMenu.appendChild(el);
+  });
+}
+
+function tileText(b) {
+  return `${BUILDINGS[b.type].short}\nLv${b.level}`;
+}
+
+function renderGrid() {
+  ui.baseGrid.innerHTML = "";
+  for (let y = 0; y < GRID_SIZE; y += 1) {
+    for (let x = 0; x < GRID_SIZE; x += 1) {
+      const b = buildingAt(x, y);
+      const tile = document.createElement("button");
+      tile.className = `tile${b ? " occupied " + BUILDINGS[b.type].tileClass : ""}${b && b.id === selectedBuildingId ? " sel" : ""}`;
+      tile.textContent = b ? tileText(b) : "";
+      tile.onclick = () => handleTileClick(x, y);
+      ui.baseGrid.appendChild(tile);
+    }
+  }
+}
+
+function renderSelected() {
+  const b = getBuildingState(selectedBuildingId);
+  if (!b) {
+    ui.selectedInfo.textContent = "Nenhum edificio selecionado.";
+    return;
+  }
+  const s = buildingStats(b);
+  const c = upgradeCost(b);
+  ui.selectedInfo.innerHTML = `
+    <strong>${BUILDINGS[b.type].name} (Lv ${b.level})</strong><br>
+    HP: ${s.hp} | Defesa: ${s.defense}<br>
+    Producao: +${s.prodGold} ouro/min e +${s.prodEnergy} energia/min<br>
+    Upgrade: ${c.gold} ouro / ${c.energy} energia
+  `;
+}
+
+function renderEnemy() {
+  if (!selectedEnemy) {
+    ui.enemyInfo.textContent = "Nenhum alvo encontrado.";
+    return;
+  }
+  ui.enemyInfo.innerHTML = `
+    <strong>${selectedEnemy.name}</strong><br>
+    Nivel ${selectedEnemy.level} | Trofeus ${selectedEnemy.trophies}<br>
+    Defesa estimada: ${selectedEnemy.defense}
+  `;
+}
+
+function renderLeaderboard() {
+  const profiles = Object.values(loadProfiles()).sort((a, b) => b.trophies - a.trophies || b.level - a.level);
+  ui.leaderboard.innerHTML = "";
+  profiles.slice(0, 12).forEach((p, idx) => {
+    const item = document.createElement("div");
+    item.className = "rank";
+    item.textContent = `#${idx + 1} ${p.name} | Nv ${p.level} | ${p.trophies} trofeus`;
+    ui.leaderboard.appendChild(item);
+  });
+}
+
+function renderAll() {
+  renderHeader();
+  renderBuildMenu();
+  renderGrid();
+  renderSelected();
+  renderEnemy();
+  renderLeaderboard();
+}
+
+function handleTileClick(x, y) {
   const existing = buildingAt(x, y);
   if (existing) {
     selectedBuildingId = existing.id;
     selectedBuildType = null;
-    rerender();
+    renderAll();
     return;
   }
   if (!selectedBuildType) return;
 
   const cfg = BUILDINGS[selectedBuildType];
   if (!spend(cfg.cost)) {
-    addLog(`Not enough resources to build ${cfg.name}.`);
+    log(`Recursos insuficientes para ${cfg.name}.`);
     return;
   }
-  state.buildings.push({ id: uid(), type: selectedBuildType, x, y, level: 1 });
-  gainXp(25);
-  addLog(`${cfg.name} was built at (${x + 1}, ${y + 1}).`);
+
+  state.buildings.push({
+    id: uid(),
+    type: selectedBuildType,
+    x,
+    y,
+    level: 1
+  });
+  addXp(24);
+  log(`${cfg.name} construido em (${x + 1}, ${y + 1}).`);
   selectedBuildType = null;
   selectedBuildingId = null;
-  saveCurrentState();
-  rerender();
+  saveCurrent();
+  renderAll();
 }
 
-function handleUpgrade() {
-  const b = state.buildings.find((i) => i.id === selectedBuildingId);
-  if (!b) return;
-  const cost = upgradeCost(b);
-  if (!spend(cost)) {
-    addLog("Not enough resources for upgrade.");
+function onUpgrade() {
+  const b = getBuildingState(selectedBuildingId);
+  if (!b) {
+    log("Selecione um edificio primeiro.");
+    return;
+  }
+  const c = upgradeCost(b);
+  if (!spend(c)) {
+    log("Recursos insuficientes para upgrade.");
     return;
   }
   b.level += 1;
-  gainXp(35 + b.level * 3);
-  addLog(`${BUILDINGS[b.type].name} upgraded to Lv ${b.level}.`);
-  saveCurrentState();
-  rerender();
+  addXp(34 + b.level * 4);
+  log(`${BUILDINGS[b.type].name} melhorado para Lv ${b.level}.`);
+  saveCurrent();
+  renderAll();
 }
 
-function handleFindEnemy() {
-  selectedEnemy = buildEnemyFromLeaderboard();
-  addLog(`Enemy spotted: ${selectedEnemy.name} (power ${selectedEnemy.power}).`);
-  rerender();
-}
-
-function handleAttack() {
-  if (!selectedEnemy) {
-    addLog("Find an enemy first.");
+function onTrain(amount) {
+  const hasBarracks = state.buildings.some((b) => b.type === "barracks");
+  if (!hasBarracks) {
+    log("Voce precisa de um Quartel para treinar tropas.");
     return;
   }
-  const myPower = Math.floor(offensePower() * (0.85 + Math.random() * 0.35));
-  const enemyPower = Math.floor(selectedEnemy.power * (0.8 + Math.random() * 0.45));
-  const won = myPower >= enemyPower;
-  if (won) {
-    const goldLoot = Math.floor(selectedEnemy.rewardGold * (0.8 + Math.random() * 0.5));
-    const energyLoot = Math.floor(selectedEnemy.rewardEnergy * (0.8 + Math.random() * 0.5));
-    state.gold += goldLoot;
-    state.energy += energyLoot;
-    state.trophies += 11;
-    gainXp(60);
-    addLog(`Victory against ${selectedEnemy.name}! +${goldLoot}G +${energyLoot}E +11 trophies.`);
-  } else {
-    state.trophies = Math.max(0, state.trophies - 7);
-    gainXp(18);
-    addLog(`Defeat against ${selectedEnemy.name}. -7 trophies.`);
+  const c = trainCost(amount);
+  if (!spend(c)) {
+    log("Recursos insuficientes para treinar tropas.");
+    return;
   }
-  saveCurrentState();
-  rerender();
+  state.troops += amount;
+  addXp(6 * amount);
+  log(`Treinamento concluido: +${amount} tropas.`);
+  saveCurrent();
+  renderAll();
 }
 
-function tick() {
+function randomEnemy() {
+  const others = Object.values(loadProfiles()).filter((p) => p.id !== state.id);
+  if (others.length > 0) {
+    const p = others[Math.floor(Math.random() * others.length)];
+    return {
+      id: p.id,
+      name: p.name,
+      level: p.level,
+      trophies: p.trophies,
+      defense: 80 + p.level * 18 + Math.floor(Math.random() * 60),
+      lootGold: 130 + p.level * 35,
+      lootEnergy: 110 + p.level * 33
+    };
+  }
+  const lvl = clamp(state.level + Math.floor(Math.random() * 3) - 1, 1, 99);
+  return {
+    id: `bot-${uid()}`,
+    name: `Bot ${lvl}`,
+    level: lvl,
+    trophies: 100 + lvl * 10,
+    defense: 90 + lvl * 20 + Math.floor(Math.random() * 75),
+    lootGold: 150 + lvl * 38,
+    lootEnergy: 130 + lvl * 34
+  };
+}
+
+function onScout() {
+  selectedEnemy = randomEnemy();
+  log(`Alvo encontrado: ${selectedEnemy.name} (defesa ${selectedEnemy.defense}).`);
+  renderAll();
+}
+
+function onAttack() {
+  if (!selectedEnemy) {
+    log("Procure um alvo antes de atacar.");
+    return;
+  }
+  if (state.troops <= 0) {
+    log("Voce nao tem tropas. Treine antes de atacar.");
+    return;
+  }
+
+  const usedTroops = Math.max(1, Math.floor(state.troops * 0.5));
+  const attack = Math.floor(totalOffense() * (0.85 + Math.random() * 0.35));
+  const defense = Math.floor(selectedEnemy.defense * (0.8 + Math.random() * 0.45));
+  const win = attack >= defense;
+
+  if (win) {
+    const goldLoot = Math.floor(selectedEnemy.lootGold * (0.75 + Math.random() * 0.5));
+    const energyLoot = Math.floor(selectedEnemy.lootEnergy * (0.75 + Math.random() * 0.5));
+    state.gold += goldLoot;
+    state.energy += energyLoot;
+    state.trophies += 12;
+    addXp(70);
+    log(`Vitoria! +${goldLoot} ouro, +${energyLoot} energia, +12 trofeus.`);
+  } else {
+    state.trophies = Math.max(0, state.trophies - 8);
+    addXp(20);
+    log(`Derrota. Voce perdeu 8 trofeus.`);
+  }
+
+  state.troops = Math.max(0, state.troops - usedTroops);
+  log(`Tropas usadas no ataque: ${usedTroops}.`);
+  selectedEnemy = null;
+  saveCurrent();
+  renderAll();
+}
+
+function gameTick() {
   const now = Date.now();
   const delta = (now - state.lastTick) / 1000;
   state.lastTick = now;
-  collectProduction(delta);
-  rerender();
+  syncProduction(delta);
+  renderHeader();
 }
 
-function chooseProfile() {
-  const remembered = localStorage.getItem(CURRENT_PROFILE_KEY);
+function chooseOrCreateProfile() {
+  const remembered = localStorage.getItem(CURRENT_KEY);
   const profiles = loadProfiles();
   if (remembered && profiles[remembered]) {
     profileId = remembered;
-    state = profiles[profileId];
+    state = profiles[remembered];
     return;
   }
-  els.profileModal.classList.add("show");
+  ui.modalProfile.classList.add("show");
 }
 
-function startWithName() {
-  const name = els.profileNameInput.value.trim();
+function startProfile() {
+  const name = ui.inputProfileName.value.trim();
   if (name.length < 3) return;
-  state = createInitialState(name);
+  state = makeNewProfile(name);
   profileId = state.id;
   const profiles = loadProfiles();
   profiles[profileId] = state;
   saveProfiles(profiles);
-  localStorage.setItem(CURRENT_PROFILE_KEY, profileId);
-  els.profileModal.classList.remove("show");
-  rerender();
-  addLog(`Welcome, ${state.name}. Your kingdom begins now.`);
+  localStorage.setItem(CURRENT_KEY, profileId);
+  ui.modalProfile.classList.remove("show");
+  log(`Bem-vindo, ${state.name}. Seu reino comecou.`);
+  renderAll();
+}
+
+function wireEvents() {
+  ui.btnUpgrade.onclick = onUpgrade;
+  ui.btnTrain1.onclick = () => onTrain(1);
+  ui.btnTrain5.onclick = () => onTrain(5);
+  ui.btnScout.onclick = onScout;
+  ui.btnAttack.onclick = onAttack;
+  ui.btnStart.onclick = startProfile;
+  ui.inputProfileName.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter") startProfile();
+  });
+  window.addEventListener("beforeunload", () => {
+    if (state) saveCurrent();
+  });
 }
 
 function init() {
-  chooseProfile();
-  if (!state) {
-    els.startGameBtn.onclick = startWithName;
-    els.profileNameInput.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter") startWithName();
-    });
-    return;
-  }
-  rerender();
+  wireEvents();
+  chooseOrCreateProfile();
+  if (!state) return;
+  renderAll();
+  const prod = perMinuteProduction();
+  log(`Produzindo ${prod.gold} ouro/min e ${prod.energy} energia/min.`);
 }
 
-els.upgradeBtn.onclick = handleUpgrade;
-els.findEnemyBtn.onclick = handleFindEnemy;
-els.attackBtn.onclick = handleAttack;
+setInterval(() => {
+  if (!state) return;
+  gameTick();
+}, TICK_INTERVAL);
 
-window.addEventListener("beforeunload", saveCurrentState);
 setInterval(() => {
   if (!state) return;
-  saveCurrentState();
-}, SAVE_INTERVAL_MS);
-setInterval(() => {
-  if (!state) return;
-  tick();
-}, TICK_INTERVAL_MS);
+  saveCurrent();
+}, SAVE_INTERVAL);
 
 init();
