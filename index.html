@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Potência da Guerra</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+text-align:center;
+margin:0;
+}
+
+h1{
+color:gold;
+margin-top:20px;
+}
+
+.box{
+background:#1e293b;
+margin:15px;
+padding:20px;
+border-radius:10px;
+}
+
+button{
+padding:15px;
+margin:10px;
+font-size:18px;
+background:#dc2626;
+color:white;
+border:none;
+border-radius:8px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>⚔️ Potência da Guerra</h1>
+
+<div class="box">
+
+<p>💰 Ouro: <span id="gold">100</span></p>
+<p>🪖 Tropas: <span id="troops">0</span></p>
+
+</div>
+
+<div class="box">
+
+<button onclick="treinar()">Treinar Soldado (50 ouro)</button>
+
+<button onclick="atacar()">Atacar Inimigo</button>
+
+</div>
+
+<div class="box">
+
+<p id="log">Bem-vindo comandante!</p>
+
+</div>
+
+<script>
+
+let gold = 100
+let troops = 0
+
+function atualizar(){
+
+document.getElementById("gold").innerText = gold
+document.getElementById("troops").innerText = troops
+
+}
+
+function treinar(){
+
+if(gold >= 50){
+
+gold -= 50
+troops += 1
+
+document.getElementById("log").innerText = "Soldado treinado!"
+
+}else{
+
+document.getElementById("log").innerText = "Ouro insuficiente!"
+
+}
+
+atualizar()
+
+}
+
+function atacar(){
+
+if(troops <= 0){
+
+document.getElementById("log").innerText = "Você não tem tropas!"
+
+return
+
+}
+
+let chance = Math.random()
+
+if(chance > 0.4){
+
+let loot = Math.floor(Math.random()*100)+50
+
+gold += loot
+
+document.getElementById("log").innerText = "Vitória! Você ganhou "+loot+" ouro!"
+
+}else{
+
+troops -= 1
+
+document.getElementById("log").innerText = "Derrota! Você perdeu um soldado."
+
+}
+
+atualizar()
+
+}
+
+atualizar()
+
+</script>
+
+</body>
+</html>
